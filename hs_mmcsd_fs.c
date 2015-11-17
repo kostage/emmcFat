@@ -56,6 +56,7 @@
 #include "cache.h"
 #include "mmu.h"
 
+#define START_ADDR_DDR 0x80000000
 /* Fat devices registered */
 #ifndef fatDevice
 typedef struct _fatDevice
@@ -99,6 +100,7 @@ Defines the help message for cat.
 
 #define SFD 1
 #define FDISK 0
+#define CLUSTER_SIZE 128
 /*****************************************************************************
 Current FAT fs state.
 ******************************************************************************/
@@ -1502,13 +1504,9 @@ Cmd_mkfs(int argc, char *argv[])
     fresult = f_mkfs (
     		g_cCwdBuf,  /* [IN] Logical drive number */
       SFD,          	/* [IN] Partitioning rule */
-      128            	/* [IN] Size of the allocation unit */
+      CLUSTER_SIZE            	/* [IN] Size of the allocation unit */
     );
     if (fresult != FR_OK) return fresult;
-
-//    MMCSDReadCmdSend(&ctrlInfo, g_cDataBuf, 0, 1);
-//    g_cDataBuf[0x10] = 2;
-//    MMCSDWriteCmdSend(&ctrlInfo, g_cDataBuf, 0, 1);
 
     fresult = f_mount(&g_sFatFs, g_cCwdBuf, 1);
 
@@ -1516,6 +1514,136 @@ Cmd_mkfs(int argc, char *argv[])
     ** Return fresult.
     */
     return fresult;
+}
+
+/*******************************************************************************
+**
+** Стартуем наш быдлокод
+**
+*******************************************************************************/
+int
+Cmd_run(int argc, char *argv[])
+{
+    FRESULT fresultRead = FR_NOT_READY;
+    unsigned int tmp;
+    unsigned int imsize;
+
+    //если аргументов меньше 2-х - унизить юзера
+    if (argc != 2)
+    {
+        ConsoleUtilsPrintf("\n\tHelp for stupid:\n");
+        ConsoleUtilsPrintf("\t\trun <FILENAME>\n");
+    	return FR_OK;
+    }
+    /*
+    ** First, check to make sure that the current path (CWD), plus the file
+    ** name, plus a separator and trailing null, will all fit in the temporary
+    ** buffer that will be used to hold the file name.  The file name must be
+    ** fully specified, with path, to FatFs.
+    */
+    if(strlen(g_cCwdBuf) + strlen(argv[1]) + 1 + 1 > sizeof(g_cTmpBuf))
+    {
+        ConsoleUtilsPrintf("Resulting path name is too long\n");
+        return(0);
+    }
+
+    /*
+    ** Copy the current path to the temporary buffer so it can be manipulated.
+    */
+    strcpy(g_cTmpBuf, g_cCwdBuf);
+
+    /*
+    ** If not already at the root level, then append a separator.
+    */
+    if(strcmp("/", g_cCwdBuf))
+    {
+        strcat(g_cTmpBuf, "/");
+    }
+
+	/*
+	** Now finally, append the file name to result in fully specified file.
+	*/
+	strcat(g_cTmpBuf, argv[1]);
+
+	/*
+	** Open the file for reading.
+	*/
+	fresultRead = f_open(&g_sFileObject, g_cTmpBuf, FA_READ);
+
+	if(fresultRead != FR_OK)
+	{
+		return(fresultRead);
+	}
+	//образ должен целиком влезать в буфер
+	if (tmp = (f_size(&g_sFileObject)) >= sizeof(g_cDataBuf))
+	{
+        ConsoleUtilsPrintf("\nImage too large!!!");
+        fresultRead = f_close(&g_sFileObject);
+
+        if(fresultRead != FR_OK)
+        {
+            ConsoleUtilsPrintf("\nClosing file error");
+            return(fresultRead);
+        }
+
+        return FR_OK;
+	}
+	/*
+	 ** Read a block of data from the file.  Read as much as can fit in
+	 ** temporary buffer, including a space for the trailing null.
+	 */
+	 fresultRead = f_read(&g_sFileObject, g_cDataBuf,
+						  sizeof(g_cDataBuf) - 1, &usBytesRead);
+
+	 /*
+	 ** If there was an error reading, then print a newline and return
+	 ** error to the user.
+	 */
+	 if(fresultRead != FR_OK)
+	 {
+		 ConsoleUtilsPrintf("\n");
+		 return(fresultRead);
+	 }
+
+	 //Проверяем, что образ приложения загружается где-то между 0x80000000 и 0x90000000
+	 //и содержит адекватное значение длины
+	 //читаем длину образа из GP Header
+	 imsize = g_cDataBuf[0] + (g_cDataBuf[1] << 8) + (g_cDataBuf[2] << 16) + (g_cDataBuf[3] << 24);
+	 tmp = tmp - (imsize/128)*128 - (imsize%128)? 128 : 0;
+
+	 if (tmp != 0)
+	 {
+        ConsoleUtilsPrintf("\nincorrect Image!!!");
+        fresultRead = f_close(&g_sFileObject);
+	    if(fresultRead != FR_OK)
+        {
+            ConsoleUtilsPrintf("\nClosing file error");
+            return(fresultRead);
+        }
+        return FR_OK;
+	 }
+
+	 //проверяем корректность адреса загрузки образа
+	 tmp = g_cDataBuf[4] + (g_cDataBuf[5] << 8) + (g_cDataBuf[6] << 16) + (g_cDataBuf[7] << 24);
+
+	 if ((tmp < START_ADDR_DDR) || ((tmp + imsize) >= DDR_MEM_BSS))
+	 {
+        ConsoleUtilsPrintf("\nImage overlaps running code!!!");
+        fresultRead = f_close(&g_sFileObject);
+	    if(fresultRead != FR_OK)
+        {
+            ConsoleUtilsPrintf("\nClosing file error");
+            return(fresultRead);
+        }
+        return FR_OK;
+	 }
+	 //Далее убиваем все модули, задействованные этим загрузчиком
+	 //НА ВСЯКИЙ ПОЖАРНЫЙ!!!
+
+    /*
+    ** Return fresult.
+    */
+    return fresultRead;
 }
 
 
@@ -1557,7 +1685,8 @@ tCmdLineEntry g_sCmdTable[] =
     { "pwd",    Cmd_pwd,      "  : Show current working directory" },
     { "cat",    Cmd_cat,      HELP_CAT },
     { "rm",     Cmd_rm,      "   : Delete a file or an empty directory" },
-	{ "mkfs",     Cmd_mkfs,      "   : Format to one partition" },
+	{ "mkfs",   Cmd_mkfs,      "   : Format to one partition" },
+	{ "run",    Cmd_run,      "   : Run CCS image (image_ti.bin)" },
     { 0, 0, 0 }
 };
 
