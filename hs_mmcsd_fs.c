@@ -57,6 +57,7 @@
 #include "mmu.h"
 
 #define START_ADDR_DDR 0x80000000
+#define DDR_MEM_BSS 0x90000000
 /* Fat devices registered */
 #ifndef fatDevice
 typedef struct _fatDevice
@@ -279,7 +280,8 @@ extern mmcsdCtrlInfo  ctrlInfo;
 
 extern int xmodemReceive(unsigned char *dest, int destsz);
 extern int xmodemTransmit(unsigned char *src, int srcsz);
-
+extern void resetmodules(void);
+static void (*appEntry)();
 /*******************************************************************************
 **
 ** This function reads a line of text from the UART console. 
@@ -1593,7 +1595,7 @@ Cmd_run(int argc, char *argv[])
 	 ** temporary buffer, including a space for the trailing null.
 	 */
 	 fresultRead = f_read(&g_sFileObject, g_cDataBuf,
-						  sizeof(g_cDataBuf) - 1, &usBytesRead);
+						  sizeof(g_cDataBuf) - 1, &tmp);
 
 	 /*
 	 ** If there was an error reading, then print a newline and return
@@ -1609,9 +1611,9 @@ Cmd_run(int argc, char *argv[])
 	 //и содержит адекватное значение длины
 	 //читаем длину образа из GP Header
 	 imsize = g_cDataBuf[0] + (g_cDataBuf[1] << 8) + (g_cDataBuf[2] << 16) + (g_cDataBuf[3] << 24);
-	 tmp = tmp - (imsize/128)*128 - (imsize%128)? 128 : 0;
+	 tmp = tmp - (imsize/128)*128;
 
-	 if (tmp != 0)
+	 if ((tmp != 0) && (tmp != 128))
 	 {
         ConsoleUtilsPrintf("\nincorrect Image!!!");
         fresultRead = f_close(&g_sFileObject);
@@ -1637,9 +1639,17 @@ Cmd_run(int argc, char *argv[])
         }
         return FR_OK;
 	 }
+
+	 f_close(&g_sFileObject);
 	 //Далее убиваем все модули, задействованные этим загрузчиком
 	 //НА ВСЯКИЙ ПОЖАРНЫЙ!!!
+	 resetmodules();
+	 //копируем образ приложения туда, куда указывает load адрес
+	 memcpy((void*)tmp, (void*)(g_cDataBuf+8), imsize - 8);
 
+	 //от винта!
+	 appEntry = (void (*)(void)) tmp;
+	 (*appEntry)();
     /*
     ** Return fresult.
     */
