@@ -56,7 +56,7 @@
 UND_STACK_SIZE .set 0x8
 ABT_STACK_SIZE .set 0x8
 FIQ_STACK_SIZE .set 0x8
-IRQ_STACK_SIZE .set 0x1000
+IRQ_STACK_SIZE .set 0x80
 SVC_STACK_SIZE .set 0x8
 
 ;
@@ -151,6 +151,7 @@ Entry:
         MOV r0,#0x40000000
         FMXR FPEXC, r0                        ; Set the VFP/Neon Enable bit
 
+
 ;
 ; Clear the BSS section here
 ;
@@ -165,7 +166,7 @@ Entry:
 ;         CMP   r0, r1
 ;         BLE   Loop                            ; Clear till BSS end
 ;
-         BL    __TI_auto_init                  ; Call TI auto init
+;         BL    __TI_auto_init                  ; Call TI auto init
 
 ;
 ; Enter the start_boot function. The execution still happens in system mode.

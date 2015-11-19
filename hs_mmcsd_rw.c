@@ -714,13 +714,8 @@ int main(void)
 	volatile unsigned int i = 0;
     volatile unsigned int initFlg = 1;
 
+
 	InitCLK_DDR();
-
-    /* Setup the MMU and do necessary MMU configurations. */
-//    MMUConfigAndEnable();
-
-    /* Enable all levels of CACHE. */
-    CacheEnable(CACHE_ALL);
 
     /* Initialize console for communication with the Host Machine */
     ConsoleUtilsInit();
@@ -731,18 +726,6 @@ int main(void)
     **       recommended to use Uart console interface only.
     */
     ConsoleUtilsSetType(CONSOLE_UART);
-
-    /* Enabling functional clocks for GPIO1 instance. */
-//    GPIO1ModuleClkConfig();
-    /* Enabling the GPIO module. */
-//    GPIOModuleEnable(GPIO_INSTANCE_ADDRESS);
-    /* Resetting the GPIO module. */
-//    GPIOModuleReset(GPIO_INSTANCE_ADDRESS);
-    /* Setting the GPIO pin as an output pin. */
-//    GPIODirModeSet(GPIO_INSTANCE_ADDRESS,GPIO_INSTANCE_PIN_NUMBER,GPIO_DIR_OUTPUT);
-
-//	GPIOPinWrite(GPIO_INSTANCE_ADDRESS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_HIGH);
-//	GPIOPinWrite(GPIO_INSTANCE_ADDRESS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_LOW);
 
     /* Configure the EDMA clocks. */
     EDMAModuleClkConfig();
@@ -812,4 +795,51 @@ int main(void)
         }
     }
 }
+#if 0
+void startinit(void)
+{
+    CacheEnable(CACHE_ALL);
+//   CacheDisable(CACHE_ALL);
+//    CacheEnable(CACHE_ALL);
 
+    /* Initialize console for communication with the Host Machine */
+    ConsoleUtilsInit();
+
+    /*
+    ** Select the console type based on compile time check
+    ** Note: This example is not fully complaint to semihosting. It is
+    **       recommended to use Uart console interface only.
+    */
+    ConsoleUtilsSetType(CONSOLE_UART);
+
+    /* Enabling functional clocks for GPIO1 instance. */
+//    GPIO1ModuleClkConfig();
+    /* Enabling the GPIO module. */
+//    GPIOModuleEnable(GPIO_INSTANCE_ADDRESS);
+    /* Resetting the GPIO module. */
+//    GPIOModuleReset(GPIO_INSTANCE_ADDRESS);
+    /* Setting the GPIO pin as an output pin. */
+//    GPIODirModeSet(GPIO_INSTANCE_ADDRESS,GPIO_INSTANCE_PIN_NUMBER,GPIO_DIR_OUTPUT);
+
+//	GPIOPinWrite(GPIO_INSTANCE_ADDRESS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_HIGH);
+//	GPIOPinWrite(GPIO_INSTANCE_ADDRESS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_LOW);
+
+    /* Configure the EDMA clocks. */
+    EDMAModuleClkConfig();
+
+    /* Configure EDMA to service the HSMMCSD events. */
+    HSMMCSDEdmaInit();
+
+    /* Perform pin-mux for HSMMCSD pins. */
+    HSMMCSDPinMuxSetup();
+
+    /* Enable module clock for HSMMCSD. */
+    HSMMCSDModuleClkConfig();
+
+    DelayTimerSetup();
+    /* Initialize the MMCSD controller */
+    HSMMCSDControllerInit(&ctrlInfo);
+
+
+}
+#endif

@@ -282,6 +282,7 @@ extern int xmodemReceive(unsigned char *dest, int destsz);
 extern int xmodemTransmit(unsigned char *src, int srcsz);
 extern void resetmodules(void);
 static void (*appEntry)();
+//extern void startinit(void);
 /*******************************************************************************
 **
 ** This function reads a line of text from the UART console. 
@@ -1523,6 +1524,7 @@ Cmd_mkfs(int argc, char *argv[])
 ** —тартуем наш быдлокод
 **
 *******************************************************************************/
+
 int
 Cmd_run(int argc, char *argv[])
 {
@@ -1647,6 +1649,7 @@ Cmd_run(int argc, char *argv[])
 	 //копируем образ приложени€ туда, куда указывает load адрес
 	 memcpy((void*)tmp, (void*)(g_cDataBuf+8), imsize - 8);
 
+//	 startinit();
 	 //от винта!
 	 appEntry = (void (*)(void)) tmp;
 	 (*appEntry)();

@@ -12,8 +12,8 @@
 /*                 scheme according to the size of your program.            */
 /*                                                                          */
 /****************************************************************************/
--stack  0x0008                             /* SOFTWARE STACK SIZE           */
--heap   0x2000                             /* HEAP AREA SIZE                */
+//-stack  0x0008                             /* SOFTWARE STACK SIZE           */
+//-heap   0x2000                             /* HEAP AREA SIZE                */
 -e Entry
 /* Since we used 'Entry' as the entry-point symbol the compiler issues a    */
 /* warning (#10063-D: entry-point symbol other than "_c_int00" specified:   */
@@ -27,6 +27,7 @@
 MEMORY
 {
         IRAM_MEM : org = 0x402F0400  len = 0x1B400            //PUBLIC RAM 109KB
+        DDR_MEM : org = 0x8F000000  len = 0x1B400            //PUBLIC RAM 109KB
         DDR_MEM_BSS        : org = 0x90000000  len = 0x7FFFFFF           /* RAM */
 }
 
@@ -37,9 +38,9 @@ SECTIONS
     .text    : load > IRAM_MEM              // CODE
     .data    : load > IRAM_MEM              // INITIALIZED GLOBAL AND STATIC VARIABLES.
     .bss     : load > DDR_MEM_BSS              // UNINITIALIZED OR ZERO INITIALIZED
-    .sysmem  : load > IRAM_MEM                                         // GLOBAL & STATIC VARIABLES.
                     RUN_START(bss_start)
                     RUN_END(bss_end)
+    .sysmem  : load > IRAM_MEM                                         // GLOBAL & STATIC VARIABLES.
     .const   : load > IRAM_MEM              // GLOBAL CONSTANTS
     .stack   : load > IRAM_MEM HIGH           // SOFTWARE SYSTEM STACK  загоняем стек в самы конец
 }

@@ -23,49 +23,12 @@ extern mmcsdCtrlInfo  ctrlInfo;
 //Обрубание клоков ДМА модуля
 void EDMAModuleClkDisable(void)
 {
-    /* Configuring L3 Interface Clocks. */
-
-    /* Writing to MODULEMODE field of CM_PER_L3_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) |=
-    		CM_PER_L3_CLKCTRL_MODULEMODE_DISABLED;
-
-    /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_L3_CLKCTRL_MODULEMODE_DISABLED !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKCTRL) &
-           CM_PER_L3_CLKCTRL_MODULEMODE));
-
-    /* Writing to MODULEMODE field of CM_PER_L3_INSTR_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) |=
-    		CM_PER_L3_INSTR_CLKCTRL_MODULEMODE_DISABLED;
-
-    /* Waiting for MODULEMODE field to reflect the written value. */
-    while(CM_PER_L3_INSTR_CLKCTRL_MODULEMODE_DISABLED !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_INSTR_CLKCTRL) &
-           CM_PER_L3_INSTR_CLKCTRL_MODULEMODE));
-
-    /* Checking fields for necessary values.  *////////////////////////////////
-
-    /*
-    ** Waiting for CLKACTIVITY_L3_GCLK field in CM_PER_L3_CLKSTCTRL register to
-    ** attain the desired value.
-    */
-    while(0 !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3_CLKSTCTRL) &
-           CM_PER_L3_CLKSTCTRL_CLKACTIVITY_L3_GCLK));
-
-    /*
-    ** Waiting for CLKACTIVITY_L3S_GCLK field in CM_PER_L3S_CLKSTCTRL register
-    ** to attain the desired value.
-    */
-    while(0 !=
-          (HWREG(SOC_CM_PER_REGS + CM_PER_L3S_CLKSTCTRL) &
-          CM_PER_L3S_CLKSTCTRL_CLKACTIVITY_L3S_GCLK));
 
     /* Configuring clocks for EDMA3 TPCC and TPTCs. */
 
     /* Writing to MODULEMODE field of CM_PER_TPCC_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) |=
-    		CM_PER_TPCC_CLKCTRL_MODULEMODE_DISABLE;
+    HWREG(SOC_CM_PER_REGS + CM_PER_TPCC_CLKCTRL) &=
+    		~CM_PER_TPCC_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
     while(CM_PER_TPCC_CLKCTRL_MODULEMODE_DISABLE !=
@@ -73,8 +36,8 @@ void EDMAModuleClkDisable(void)
           CM_PER_TPCC_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_TPTC0_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) |=
-    		CM_PER_TPTC0_CLKCTRL_MODULEMODE_DISABLE;
+    HWREG(SOC_CM_PER_REGS + CM_PER_TPTC0_CLKCTRL) &=
+    		~CM_PER_TPTC0_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
     while(CM_PER_TPTC0_CLKCTRL_MODULEMODE_DISABLE !=
@@ -82,8 +45,8 @@ void EDMAModuleClkDisable(void)
            CM_PER_TPTC0_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_TPTC1_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) |=
-    		CM_PER_TPTC1_CLKCTRL_MODULEMODE_DISABLE;
+    HWREG(SOC_CM_PER_REGS + CM_PER_TPTC1_CLKCTRL) &=
+    		~CM_PER_TPTC1_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
     while(CM_PER_TPTC1_CLKCTRL_MODULEMODE_DISABLE !=
@@ -91,8 +54,8 @@ void EDMAModuleClkDisable(void)
            CM_PER_TPTC1_CLKCTRL_MODULEMODE));
 
     /* Writing to MODULEMODE field of CM_PER_TPTC2_CLKCTRL register. */
-    HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) |=
-    		CM_PER_TPTC2_CLKCTRL_MODULEMODE_DISABLE;
+    HWREG(SOC_CM_PER_REGS + CM_PER_TPTC2_CLKCTRL) &=
+    		~CM_PER_TPTC2_CLKCTRL_MODULEMODE_ENABLE;
 
     /* Waiting for MODULEMODE field to reflect the written value. */
     while(CM_PER_TPTC2_CLKCTRL_MODULEMODE_DISABLE !=
