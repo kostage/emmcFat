@@ -390,6 +390,11 @@ static void HSMMCSDXferSetup(mmcsdCtrlInfo *ctrl, unsigned char rwFlag, void *pt
     callbackOccured = 0;
     xferCompFlag = 0;
 
+    HSMMCSDBlkLenSet(ctrl->memBase, blkSize);
+
+    //Добавочка от ДОРОШЕНКО КП передача блока меньше 4 байт, дма поддерживает только 32-хбитный обмен
+    if (blkSize < 4) blkSize = 4;
+
     if (rwFlag == 1)
     {
         HSMMCSDRxDmaConfig(ptr, blkSize, nBlks);
@@ -400,7 +405,6 @@ static void HSMMCSDXferSetup(mmcsdCtrlInfo *ctrl, unsigned char rwFlag, void *pt
     }
 
     ctrl->dmaEnable = 1;
-    HSMMCSDBlkLenSet(ctrl->memBase, blkSize);
 }
 
 
@@ -700,6 +704,7 @@ static void HSMMCSDControllerSetup(void)
     ctrlInfo.dmaEnable = 0;
     sdCard.ctrl = &ctrlInfo;
     sdCard.rca = 1;
+    sdCard.error = 0;
 
     callbackOccured = 0;
     xferCompFlag = 0;
@@ -715,7 +720,7 @@ int main(void)
     volatile unsigned int initFlg = 1;
 
 
-	InitCLK_DDR();
+//	InitCLK_DDR();
 
     /* Initialize console for communication with the Host Machine */
     ConsoleUtilsInit();
@@ -726,6 +731,19 @@ int main(void)
     **       recommended to use Uart console interface only.
     */
     ConsoleUtilsSetType(CONSOLE_UART);
+
+    //GPIO снимаем reset c eMMC
+    /* Enabling functional clocks for GPIO1 instance. */
+    GPIO1ModuleClkConfig();
+    /* Enabling the GPIO module. */
+    GPIOModuleEnable(SOC_GPIO_1_REGS);
+    /* Resetting the GPIO module. */
+    GPIOModuleReset(SOC_GPIO_1_REGS);
+    /* Setting the GPIO pin as an output pin. */
+    GPIODirModeSet(SOC_GPIO_1_REGS,GPIO_INSTANCE_PIN_NUMBER,GPIO_DIR_OUTPUT);
+
+	GPIOPinWrite(SOC_GPIO_1_REGS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_HIGH);
+//	GPIOPinWrite(SOC_GPIO_1_REGS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_LOW);
 
     /* Configure the EDMA clocks. */
     EDMAModuleClkConfig();

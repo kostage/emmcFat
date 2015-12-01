@@ -17,6 +17,7 @@
 #include "edma.h"
 #include "consoleUtils.h"
 #include "hs_mmcsd.h"
+#include "gpio_v2.h"
 
 /* SD Controller info structure */
 extern mmcsdCtrlInfo  ctrlInfo;
@@ -76,6 +77,8 @@ void resetmodules(void)
     	ConsoleUtilsPrintf("\nFailed to reset eMMC card.\n");
 
 
+    GPIOPinWrite(SOC_GPIO_1_REGS,GPIO_INSTANCE_PIN_NUMBER,GPIO_PIN_LOW);
+
     //softreset
     if (HSMMCSDSoftReset(ctrlInfo.memBase) != 0)
     {
@@ -108,6 +111,34 @@ void resetmodules(void)
 						MMCSD_RX_EDMA_CHAN, EVT_QUEUE_NUM);
     //clock disable
     EDMAModuleClkDisable();
+
+
+    GPIOModuleDisable(SOC_GPIO_1_REGS);
+
+    /*
+    ** Writing to OPTFCLKEN_GPIO_1_GDBCLK bit in CM_PER_GPIO1_CLKCTRL
+    ** register.
+    */
+    HWREG(SOC_CM_PER_REGS + CM_PER_GPIO1_CLKCTRL) &=
+          ~CM_PER_GPIO1_CLKCTRL_OPTFCLKEN_GPIO_1_GDBCLK;
+
+    /*
+    ** Waiting for OPTFCLKEN_GPIO_1_GDBCLK bit to reflect the desired
+    ** value.
+    */
+    while(0 !=
+          (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO1_CLKCTRL) &
+           CM_PER_GPIO1_CLKCTRL_OPTFCLKEN_GPIO_1_GDBCLK));
+
+
+    /* Writing to MODULEMODE field of CM_PER_GPIO1_CLKCTRL register. */
+    HWREG(SOC_CM_PER_REGS + CM_PER_GPIO1_CLKCTRL) &=
+    		~CM_PER_GPIO1_CLKCTRL_MODULEMODE_ENABLE;
+
+    /* Waiting for MODULEMODE field to reflect the written value. */
+    while(CM_PER_GPIO1_CLKCTRL_MODULEMODE_DISABLE !=
+          (HWREG(SOC_CM_PER_REGS + CM_PER_GPIO1_CLKCTRL) &
+           CM_PER_GPIO1_CLKCTRL_MODULEMODE));
 
 }
 

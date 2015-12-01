@@ -166,7 +166,7 @@ Entry:
 ;         CMP   r0, r1
 ;         BLE   Loop                            ; Clear till BSS end
 ;
-;         BL    __TI_auto_init                  ; Call TI auto init
+         BL    __TI_auto_init                  ; Call TI auto init
 
 ;
 ; Enter the start_boot function. The execution still happens in system mode.

@@ -35,12 +35,12 @@ MEMORY
 SECTIONS
 {
 	.text:Entry : load > 0x402F0400
-    .text    : load > IRAM_MEM              // CODE
-    .data    : load > IRAM_MEM              // INITIALIZED GLOBAL AND STATIC VARIABLES.
+    .text    : load > DDR_MEM              // CODE
+    .data    : load > DDR_MEM              // INITIALIZED GLOBAL AND STATIC VARIABLES.
     .bss     : load > DDR_MEM_BSS              // UNINITIALIZED OR ZERO INITIALIZED
                     RUN_START(bss_start)
                     RUN_END(bss_end)
-    .sysmem  : load > IRAM_MEM                                         // GLOBAL & STATIC VARIABLES.
-    .const   : load > IRAM_MEM              // GLOBAL CONSTANTS
-    .stack   : load > IRAM_MEM HIGH           // SOFTWARE SYSTEM STACK  загоняем стек в самы конец
+    .sysmem  : load > DDR_MEM                                         // GLOBAL & STATIC VARIABLES.
+    .const   : load > DDR_MEM              // GLOBAL CONSTANTS
+    .stack   : load > DDR_MEM HIGH           // SOFTWARE SYSTEM STACK  загоняем стек в самы конец
 }

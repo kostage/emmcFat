@@ -67,6 +67,12 @@ DSTATUS disk_initialize (
     {
         mmcsdCardInfo *card = (mmcsdCardInfo *) fat_devices[pdrv].dev;
 
+        //Если уже была неудачная попытка инициализации больше не лезем
+        if (card->error)
+        {
+        	UARTPuts("\r\nCard Error.\r\n", -1);
+        	return STA_NOINIT;
+        }
         /* SD Card init */
         status = MMCSDCardInit(card->ctrl);
 
